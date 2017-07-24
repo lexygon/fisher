@@ -32,7 +32,7 @@ class MailTemplateForm(forms.ModelForm):
 class CatchedDataForm(forms.ModelForm):
     class Meta:
         model = CatchedData
-        fields = ['ip', 'headers', 'user_agent', 'location', 'city', 'country', 'victim']
+        fields = ['ip', 'user_agent', 'location', 'city', 'country', 'victim']
 
 
 class CountryForm(forms.ModelForm):
