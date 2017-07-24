@@ -1,0 +1,11 @@
+lockfile
+Django
+django-crispy-forms
+django-extensions
+djangorestframework
+Pillow
+django-geoposition
+pyyaml
+ua-parser
+user-agents
+django-user-agents
