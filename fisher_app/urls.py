@@ -24,6 +24,5 @@ urlpatterns = [
     url(r'^api/v1/send-mail/$', SendMailView.as_view()),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^file/(?P<uuid>[0-9A-Fa-f-]+)', FileServeView.as_view()),
-    url(r'^asd/', XView.as_view()),
     url(r'^.*/', TemplateView.as_view(template_name="base.html"), name='base')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

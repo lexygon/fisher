@@ -192,10 +192,3 @@ class CityDetailView(DetailView):
 class CityUpdateView(UpdateView):
     model = City
     form_class = CityForm
-
-
-class XView(View):
-    def get(self, request, *args, **kwargs):
-        for x, y in request.META.items():
-            print("{0} => {1}".format(x, y))
-        return HttpResponse('YOLO')

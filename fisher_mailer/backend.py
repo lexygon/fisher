@@ -18,4 +18,3 @@ class DbBackend(BaseEmailBackend):
             num_sent += 1
 
         return num_sent
-z

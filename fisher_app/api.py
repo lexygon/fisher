@@ -24,10 +24,12 @@ class MailListViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        mail_list_object = serializer.save()
+        mail_list_object = serializer.save()  # gelen veri, dbye kaydedildi
 
         with open('{0}/{1}'.format(settings.MEDIA_ROOT, str(mail_list_object.csv))) as csvfile:
+            # kaydedilen verideki csv dosyasını okuyor
             reader = csv.DictReader(csvfile)
+            # okunan verinin içindeki name-email fieldlarını collect edip TargetMail tablosuna kaydediyor.
             for row in reader:
                 data = {
                     'name': row['name'] if 'name' in row else None,
@@ -119,35 +121,6 @@ class SendMailView(RetrieveDestroyAPIView):
 
     permission_classes = (AjaxOnly, DomainOnly, AuthenticatedUserOnly)
 
-    """def get(self, request, *args, **kwargs):
-        template_object = MailTemplate.objects.get(id=1)
-        senders = [
-            ('admine gidicek1', 'hi@buraktopal.xyz', 'selam123', 'mailadmin@buraktopal.xyz'),
-            ('hi\'e gidecek1', 'mailadmin@buraktopal.xyz', 'selam123', 'hi@buraktopal.xyz')
-        ]
-
-        for full_name, username, password, target in senders:
-            str_template = render_to_string(settings.MEDIA_ROOT + '/' + str(template_object.file),
-                                            {'user': full_name})
-            with get_connection(
-                    host='smtp.yandex.com.tr',
-                    port=465,
-                    username=username,
-                    password=password,
-                    use_tls=False,
-                    use_ssl=True
-
-            ) as connection:
-                msg = EmailMessage(subject='Django Deneme1', body=str_template,
-                                   from_email=username,
-                                   to=[target],
-                                   connection=connection)
-                msg.username = username
-                msg.password = password
-                msg.send()
-
-        return Response(data={'status': 'sent', }, status=200)"""
-
     def get(self, request, *args, **kwargs):
         mail_list_object = self.get_object()
 
@@ -177,32 +150,38 @@ class SendMailView(RetrieveDestroyAPIView):
                     upper_bound += step
 
             for key, val in mails_to_send.items():
-                _targets = [mail.email for mail in val]
                 sender_mail = senders.get(email__exact=key).username
-                with get_connection(
-                        host=sender_mail.host,
-                        port=sender_mail.port,
-                        username=sender_mail.username,
-                        password=sender_mail.password,
-                        use_tls=sender_mail.use_tls,
-                        use_ssl=sender_mail.use_ssl
-                ) as connection:
-                    str_template = render_to_string(template_name='{0}/{1}'.format(settings.MEDIA_ROOT,
-                                                                                   str(mail_list_object.template.file)),
-                                                    context={'user': 'asd'})
-                    msg = EmailMessage(subject=mail_list_object.template.title,
-                                       body=str_template,
-                                       from_email=sender_mail.username,
-                                       to=_targets,
-                                       connection=connection)
 
-                    # sonraki iki satır django-mailer üzerinde yaptığım değişikliklerden sonra, henüz gideremediğim
-                    # bir bugı gidermek için eklendi. bugı yakında düzelteceğim.
-                    # https://github.com/lexygon/django-mailer adresinden geliştirmeye devam edeceğim
-                    # django-mailer'ın farklı smtp ayarlarından da mail atabilen versiyonunu takip edebilirsiniz.
+                for target in val:
+                    with get_connection(
+                            host=sender_mail.host,
+                            port=sender_mail.port,
+                            username=sender_mail.username,
+                            password=sender_mail.password,
+                            use_tls=sender_mail.use_tls,
+                            use_ssl=sender_mail.use_ssl
+                    ) as connection:
+                        # mail şablonunun içindeki {{ image_url }} kısmına urli gönderip stringe render ediyor
+                        image_url = "http://{0}/file/{1}".format(settings.DOMAIN, target.uuid)
+                        str_template = render_to_string(template_name='{0}/{1}'.format(settings.MEDIA_ROOT,
+                                                                                       str(mail_list_object.template.file)),
+                                                        context={'image': image_url})
+                        # email objesi yaratılıyor
+                        msg = EmailMessage(subject=mail_list_object.template.title,
+                                           body=str_template,
+                                           from_email=sender_mail.username,
+                                           to=[target],
+                                           connection=connection)
+                        # attachment
+                        msg.attach_file('{0}/{1}'.format(settings.MEDIA_ROOT, str(mail_list_object.template.attachment)))
 
-                    msg.username = sender_mail.username
-                    msg.password = sender_mail.password
-                    msg.send()
+                        # sonraki iki satır django-mailer üzerinde yaptığım değişikliklerden sonra, henüz gideremediğim
+                        # bir bugı gidermek için eklendi. bugı yakında düzelteceğim.
+                        # https://github.com/lexygon/django-mailer adresinden geliştirmeye devam edeceğim
+                        # django-mailer'ın farklı smtp ayarlarından da mail atabilen versiyonunu takip edebilirsiniz.
+
+                        msg.username = sender_mail.username
+                        msg.password = sender_mail.password
+                        msg.send()
 
             return Response(data={'status': 'sent', }, status=200)

@@ -87,6 +87,7 @@ class MailTemplate(models.Model):
     created = models.DateTimeField(auto_now_add=True, editable=False)
     last_updated = models.DateTimeField(auto_now=True, editable=False)
     file = models.FileField(upload_to="files/templates/", verbose_name='Mail Şablonu')
+    attachment = models.FileField(upload_to="files/attachments/", verbose_name='Attachment')
 
     class Meta:
         ordering = ('-created',)
@@ -137,12 +138,6 @@ class Country(models.Model):
     def __str__(self):
         return self.name
 
-    def get_absolute_url(self):
-        return reverse('fisher_app_country_detail', args=(self.slug,))
-
-    def get_update_url(self):
-        return reverse('fisher_app_country_update', args=(self.slug,))
-
 
 class City(models.Model):
     # Fields
@@ -159,9 +154,3 @@ class City(models.Model):
 
     def __str__(self):
         return self.name
-
-    def get_absolute_url(self):
-        return reverse('fisher_app_city_detail', args=(self.slug,))
-
-    def get_update_url(self):
-        return reverse('fisher_app_city_update', args=(self.slug,))
