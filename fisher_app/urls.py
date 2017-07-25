@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 
 from fisher import settings
 from fisher_app.api import AuthTokenViewSet, SendMailView
-from fisher_app.views import FileServeView, XView
+from fisher_app.views import FileServeView
 
 router = routers.DefaultRouter()
 router.register(r'maillist', api.MailListViewSet)
