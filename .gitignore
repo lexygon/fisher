@@ -98,3 +98,4 @@ ENV/
 media/files
 fisher_app/migrations
 .idea
+fisher/static

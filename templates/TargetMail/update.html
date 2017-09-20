@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Fisher - Hedef Mail{% endblock %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'index' %}">Ana Sayfa</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'targetmail_list' %}">Hedef Mailler</a></li>
+        <li class="breadcrumb-item">{{ object.name }}</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            {{ object.name }} İsimli Hedef Maili Düzenle
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.media }}
+                {{ form.non_field_errors }}
+                {% for field in form %}
+                    <div class="form-group row">
+                        <label class="col-md-3 form-control-label" for="text-input">{{ field.label }}</label>
+                        <div class="col-md-9">
+                            {{ field }}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

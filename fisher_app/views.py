@@ -1,42 +1,57 @@
-"""
-Proje React.js ile API üzerinden alışveriş yaptığından dolayı FileServeView hariç hepsi gereksiz;
-ancak daha sonra lazım olursa diye eklendiler
-"""
+import csv
+
+from django.contrib.auth import logout
 from django.contrib.gis.geoip2 import GeoIP2
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.shortcuts import redirect
+from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import DetailView, ListView, UpdateView, CreateView
-from .models import MailList, SenderMail, TargetMail, MailTemplate, CatchedData, Country, City
-from .forms import MailListForm, SenderMailForm, TargetMailForm, MailTemplateForm, CatchedDataForm, CountryForm, CityForm
+from django.views.generic import CreateView, TemplateView, ListView, UpdateView, DeleteView, DetailView, RedirectView
+
+from fisher import settings
+from fisher_app.forms import MailListForm, SenderMailForm, MailTemplateForm, TargetMailForm, CatchedDataForm
+from .models import TargetMail, CatchedData, Country, City, MailList, SenderMail, MailTemplate
 from django_user_agents.utils import get_user_agent
 
 
+# Logout and redirect to login
+class LogoutView(RedirectView):
+    url = '/login'
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return super(LogoutView, self).get(request, *args, **kwargs)
+
+
+# File Serve for tracking
 class FileServeView(View):
     def get(self, request, *args, **kwargs):
         if 'uuid' in self.kwargs:
-            uuid = self.kwargs['kwargs']
+            uuid = self.kwargs['uuid']
             try:
                 mail = TargetMail.objects.get(uuid__exact=uuid)
                 mail.is_read = True
                 mail.save()
 
+                catched_data = CatchedData()
+
                 _user_agent = get_user_agent(request)
+
                 location_data, ip = self.get_location(request)
 
-                country = Country.objects.get_or_create(code__exact=location_data['country_data'],
-                                                        name__exact=location_data['country_name'])
+                if location_data:
+                    catched_data.country = Country.objects.get_or_create(code__exact=location_data['country_code'],
+                                                                         name__exact=location_data['country_name'])
 
-                city = City.objects.get_or_create(name__exact=location_data['city_name'],
-                                                  region__exact=location_data['region'])
+                    catched_data.city = City.objects.get_or_create(name__exact=location_data['city_name'],
+                                                                   region__exact=location_data['region'])
 
-                catched_data = CatchedData()
+                    catched_data.location.latitude = location_data['latitude']
+                    catched_data.location.longitude = location_data['longtitude']
+
                 catched_data.victim = mail
                 catched_data.ip = ip
-                catched_data.location.latitude = location_data['latitude']
-                catched_data.location.longitude = location_data['longtitude']
-                catched_data.country = country
-                catched_data.city = city
+
                 catched_data.user_agent = "{0} {1}".format(_user_agent.browser.family,
                                                            _user_agent.browser.version_string)
                 catched_data.save()
@@ -62,133 +77,157 @@ class FileServeView(View):
         """
         g = GeoIP2()
         ip = self.request.META.get('REMOTE_ADDR', None)
-        if ip:
+        if ip and ip != '127.0.0.1':
             return g.city(ip), ip
         else:
             return None, None
 
 
-class MailListListView(ListView):
-    model = MailList
-
-
-class MailListCreateView(CreateView):
-    model = MailList
-    form_class = MailListForm
-
-
-class MailListDetailView(DetailView):
-    model = MailList
-
-
-class MailListUpdateView(UpdateView):
-    model = MailList
-    form_class = MailListForm
-
-
+# SenderMail Views
 class SenderMailListView(ListView):
     model = SenderMail
+    paginate_by = 20
+    template_name = 'SenderMail/list.html'
 
 
 class SenderMailCreateView(CreateView):
     model = SenderMail
     form_class = SenderMailForm
-
-
-class SenderMailDetailView(DetailView):
-    model = SenderMail
+    template_name = 'SenderMail/create.html'
 
 
 class SenderMailUpdateView(UpdateView):
     model = SenderMail
     form_class = SenderMailForm
+    template_name = 'SenderMail/update.html'
 
 
+class SenderMailDeleteView(DeleteView):
+    model = SenderMail
+    success_url = reverse_lazy('sendermail_list')
+
+
+# TargetMail Views
 class TargetMailListView(ListView):
     model = TargetMail
+    paginate_by = 20
+    template_name = 'TargetMail/list.html'
 
 
 class TargetMailCreateView(CreateView):
     model = TargetMail
     form_class = TargetMailForm
-
-
-class TargetMailDetailView(DetailView):
-    model = TargetMail
+    template_name = 'TargetMail/create.html'
 
 
 class TargetMailUpdateView(UpdateView):
     model = TargetMail
     form_class = TargetMailForm
+    template_name = 'TargetMail/update.html'
 
 
+class TargetMailDeleteView(DeleteView):
+    model = TargetMail
+    success_url = reverse_lazy('targetmail_list')
+
+
+# MailTemplate Views
 class MailTemplateListView(ListView):
     model = MailTemplate
+    paginate_by = 20
+    template_name = 'MailTemplate/list.html'
 
 
 class MailTemplateCreateView(CreateView):
     model = MailTemplate
     form_class = MailTemplateForm
-
-
-class MailTemplateDetailView(DetailView):
-    model = MailTemplate
+    template_name = 'MailTemplate/create.html'
 
 
 class MailTemplateUpdateView(UpdateView):
     model = MailTemplate
     form_class = MailTemplateForm
+    template_name = 'MailTemplate/update.html'
 
 
+class MailTemplateDeleteView(DeleteView):
+    model = SenderMail
+    success_url = reverse_lazy('mailtemplate_list')
+
+
+# CatchedData Views
 class CatchedDataListView(ListView):
     model = CatchedData
+    paginate_by = 20
+    template_name = 'CatchedData/list.html'
 
 
-class CatchedDataCreateView(CreateView):
+class CatchedDataDetailView(UpdateView):
     model = CatchedData
+    template_name = 'CatchedData/detail.html'
     form_class = CatchedDataForm
 
 
-class CatchedDataDetailView(DetailView):
+class CatchedDataDeleteView(DeleteView):
     model = CatchedData
+    success_url = reverse_lazy('catcheddata_list')
 
 
-class CatchedDataUpdateView(UpdateView):
-    model = CatchedData
-    form_class = CatchedDataForm
+# MailList Views
+class MailListListView(ListView):
+    model = MailList
+    template_name = 'MailList/list.html'
 
 
-class CountryListView(ListView):
-    model = Country
+class MailListCreateView(CreateView):
+    model = MailList
+    form_class = MailListForm
+    template_name = 'MailList/create.html'
+
+    def form_valid(self, form):
+        mail_list_object = form.save()  # gelen veri, dbye kaydedildi
+
+        if mail_list_object.csv:
+            with open('{0}/{1}'.format(settings.MEDIA_ROOT, str(mail_list_object.csv))) as csvfile:
+                # kaydedilen verideki csv dosyasını okuyor
+                reader = csv.DictReader(csvfile)
+                # okunan verinin içindeki name-email fieldlarını collect edip TargetMail tablosuna kaydediyor.
+                for row in reader:
+                    data = {
+                        'name': row['name'] if 'name' in row else None,
+                        'email': row['email'] if 'email' in row else None,
+                        'mail_list': mail_list_object
+                    }
+                    # CSV dosyasında email isimli bir field yoksa kaydedilen veriyi silip exception atıyor.
+                    if not data['email']:
+                        mail_list_object.delete()
+                        raise AssertionError("Yüklenen CSV dosyası 'email' isimli bir field içermemektedir.")
+                    else:
+                        target_mail = TargetMail(**data)
+                        target_mail.save()
+
+        return super(MailListCreateView, self).form_valid(form)
 
 
-class CountryCreateView(CreateView):
-    model = Country
-    form_class = CountryForm
+class MailListUpdateView(UpdateView):
+    model = MailList
+    form_class = MailListForm
+    template_name = 'MailList/update.html'
 
 
-class CountryDetailView(DetailView):
-    model = Country
+class MailListDeleteView(DeleteView):
+    model = SenderMail
+    success_url = reverse_lazy('maillist_list')
 
 
-class CountryUpdateView(UpdateView):
-    model = Country
-    form_class = CountryForm
+# Index
+class IndexView(TemplateView):
+    template_name = 'index.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(IndexView, self).get_context_data(**kwargs)
+        maillists = MailList.objects.all()
 
-class CityListView(ListView):
-    model = City
+        context['maillists'] = maillists
 
-
-class CityCreateView(CreateView):
-    model = City
-    form_class = CityForm
-
-
-class CityDetailView(DetailView):
-    model = City
-
-
-class CityUpdateView(UpdateView):
-    model = City
-    form_class = CityForm
+        return context

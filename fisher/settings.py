@@ -12,6 +12,9 @@ STATIC_URL = '/static/'
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+LOGIN_URL = '/login/'  # @login_required decoratorü için. eğer user login olmamışsa buraya yönlendirir
+LOGIN_REDIRECT_URL = '/'  # login olduktan sonra redirect edilecek url (index)
+
 # Güvenlik nedenlerinden dolayı bu keyi kaybetmeyin/gizli tutun. aksi taktirde db üzerindeki hashli tüm veriler
 # tehlikeye girer/okunamaz
 SECRET_KEY = 'dw*vszsn+q!n&_8t(tjg5$5(s(@i+)2kvfat!q=r+^4-pr&-1k'
@@ -19,7 +22,7 @@ SECRET_KEY = 'dw*vszsn+q!n&_8t(tjg5$5(s(@i+)2kvfat!q=r+^4-pr&-1k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.25']
+ALLOWED_HOSTS = []
 
 EMAIL_HOST = 'smtp.yandex.com.tr'
 EMAIL_HOST_USER = 'mailadmin@buraktopal.xyz'
@@ -92,9 +95,9 @@ WSGI_APPLICATION = 'fisher.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'database_name',
-        'USER': 'username_name',
-        'PASSWORD': 'password',
+        'NAME': 'fisherdb',
+        'USER': 'fisher',
+        'PASSWORD': 'selam123',
         'HOST': 'localhost',
         'PORT': '',
     }
@@ -123,6 +126,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
+    
     'PAGE_SIZE': 100  # pagination
 }
 

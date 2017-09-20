@@ -1,10 +1,176 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Fisher, a mail tracking system.">
+    <meta name="author" content="Burak Topal">
+    <link rel="shortcut icon" href="{% static 'img/favicon.png' %}">
+    <title>{% block page_title %}Fisher{% endblock %}</title>
+
+    <!-- Icons -->
+    <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/simple-line-icons.css' %}" rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+    <!-- Main styles for this application -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+
+    {% block extra_head %}
+    {% endblock %}
 </head>
-<body>
+
+
+<body class="app header-fixed sidebar-fixed aside-menu-fixed aside-menu-hidden">
+    <header class="app-header navbar">
+        <button class="navbar-toggler mobile-sidebar-toggler d-lg-none mr-auto" type="button">☰</button>
+        <a class="navbar-brand" href="#"></a>
+        <button class="navbar-toggler sidebar-minimizer d-md-down-none" type="button">☰</button>
+
+        <ul class="nav navbar-nav ml-auto" style="margin-right: 25px;">
+
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle nav-link" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    <img src="{% static 'img/avatar.jpeg' %}" class="img-avatar" alt="{{ request.user.email }}">
+                    <span class="d-md-down-none">{{ request.user.username }}</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item" href="{% url 'logout' %}"><i class="fa fa-lock"></i> Çıkış</a>
+                </div>
+            </li>
+        </ul>
+    </header>
+
+    <div class="app-body">
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+                <ul class="nav">
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}"><i class="icon-speedometer"></i> Ana Sayfa </a>
+                    </li>
+
+                    <li class="nav-item nav-dropdown">
+                        <a class="nav-link nav-dropdown-toggle" href="#"><i class="icon-arrow-right-circle"></i> Gönderici Mailler</a>
+                        <ul class="nav-dropdown-items">
+
+                            <li class="nav-item open">
+                                <a class="nav-link active" href="{% url 'sendermail_list' %}"><i class="icon-list"></i> Tümü</a>
+                            </li>
+                            <li class="nav-item open">
+                                <a class="nav-link active" href="{% url 'sendermail_create' %}"><i class="icon-plus"></i> Yeni Yarat</a>
+                            </li>
+
+                        </ul>
+                    </li>
+
+                    <li class="nav-item nav-dropdown">
+                        <a class="nav-link nav-dropdown-toggle" href="#"><i class="icon-folder"></i> Mail Listeleri</a>
+                        <ul class="nav-dropdown-items">
+
+                            <li class="nav-item open">
+                                <a class="nav-link active" href="{% url 'maillist_list' %}"><i class="icon-list"></i> Tümü</a>
+                            </li>
+                            <li class="nav-item open">
+                                <a class="nav-link active" href="{% url 'maillist_create' %}"><i class="icon-plus"></i> Yeni Yarat</a>
+                            </li>
+
+                        </ul>
+                    </li>
+
+                    <li class="nav-item nav-dropdown">
+                        <a class="nav-link nav-dropdown-toggle" href="#"><i class="icon-drawer"></i> Mail Şablonları</a>
+                        <ul class="nav-dropdown-items">
+
+                            <li class="nav-item open">
+                                <a class="nav-link active" href="{% url 'mailtemplate_list' %}"><i class="icon-list"></i> Tümü</a>
+                            </li>
+                            <li class="nav-item open">
+                                <a class="nav-link active" href="{% url 'mailtemplate_create' %}"><i class="icon-plus"></i> Yeni Yarat</a>
+                            </li>
+
+                        </ul>
+                    </li>
+
+                    <li class="nav-item nav-dropdown">
+                        <a class="nav-link nav-dropdown-toggle" href="#"><i class="icon-target"></i> Hedef Mailler</a>
+                        <ul class="nav-dropdown-items">
+
+                            <li class="nav-item open">
+                                <a class="nav-link active" href="{% url 'targetmail_list' %}"><i class="icon-list"></i> Tümü</a>
+                            </li>
+                            <li class="nav-item open">
+                                <a class="nav-link active" href="{% url 'targetmail_create' %}"><i class="icon-plus"></i> Yeni Yarat</a>
+                            </li>
+
+                        </ul>
+                    </li>
+
+                    <li class="nav-item nav-dropdown">
+                        <a class="nav-link nav-dropdown-toggle" href="#"><i class="icon-target"></i> Yakalanan Veriler</a>
+                        <ul class="nav-dropdown-items">
+
+                            <li class="nav-item open">
+                                <a class="nav-link active" href="{% url 'catcheddata_list' %}"><i class="icon-list"></i> Tümü</a>
+                            </li>
+
+                        </ul>
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main content -->
+        <main class="main">
+
+            {% block breadcrumb %}
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item active"><a href="#">Ana Sayfa</a></li>
+                </ol>
+            {% endblock %}
+
+            <div class="container-fluid">
+                <div class="animated fadeIn">
+                {% block content %}
+                {% endblock %}
+                </div>
+
+            </div>
+            <!-- /.conainer-fluid -->
+        </main>
+
+    </div>
+
+    <footer class="app-footer">
+        <a href="#">Fisher</a> © 2017 EndPoint Labs.
+        <span class="float-right">Powered by <a href="http://coreui.io">CoreUI</a> and <a href="http://djangoproject.com">Django</a>
+        </span>
+    </footer>
+
+    <!-- Bootstrap and necessary plugins -->
+    <script src="{% static 'bower_components/jquery/dist/jquery.min.js' %}"></script>
+    <script src="{% static 'bower_components/popper.js/index.js' %}"></script>
+    <script src="{% static 'bower_components/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'bower_components/pace/pace.min.js' %}"></script>
+
+
+    <!-- Plugins and scripts required by all views -->
+    <script src="{% static 'bower_components/chart.js/dist/Chart.min.js' %}"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+
+    <!-- GenesisUI main scripts -->
+
+    <script src="{% static 'js/app.js' %}"></script>
+
+    {% block extra_footer %}
+    {% endblock %}
 
 </body>
+
 </html>

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load fisher_tags %}
+
+{% block page_title %}Fisher - Mail Listeleri{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <i class="fa fa-align-justify"></i> Mail Listeleri
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>İsim</th>
+                        <th>Yaratılma Tarihi</th>
+                        <th>Göndericiler</th>
+                        <th>Hedef Sayısı</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for object in object_list %}
+                        <tr>
+                            <td>{{ object.name }}</td>
+                            <td>{{ object.created }}</td>
+                            <td>{{ object.get_senders }}</td>
+                            <td>{{ object.get_target_count }}</td>
+                            <td>
+                                <a href="{% url 'maillist_update' slug=object.slug %}" class="btn btn-primary"><i class="fa fa-pencil"></i>Düzenle</a>
+                                <button onclick="start('{% url "maillist_start" slug=object.slug %}')" class="btn btn-success"><i class="fa fa-send"></i>Başlat</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <ul class="pagination">
+
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% url 'maillist_list' %}?{% get_query request page=page_obj.previous_page_number %}" >
+                            Önceki
+                        </a>
+                    </li>
+                {% endif %}
+                {% if page_obj.previous_page_number|add:"-1" > 0 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% url 'maillist_list' %}?{% get_query request page=page_obj.previous_page_number|add:"-1" %}" >
+                            {{ page_obj.previous_page_number|add:"-1" }}
+                        </a>
+                    </li>
+                {% endif %}
+                {% if page_obj.number|add:"-1" > 0 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% url 'maillist_list' %}?{% get_query request page=page_obj.previous_page_number %}"  >
+                            {{ page_obj.number|add:"-1" }}
+                        </a>
+                    </li>
+                {% endif %}
+                    <li class="page-item">
+                        <a class="page-link active">
+                            {% if page_obj.number %}
+                                {{ page_obj.number }}
+                            {% else %}
+                                1
+                            {% endif %}
+                        </a>
+                    </li>
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% url 'maillist_list' %}?{% get_query request page=page_obj.next_page_number %}"  >
+                            {{ page_obj.next_page_number }}
+                        </a>
+                    </li>
+                {% endif %}
+                {% if page_obj.next_page_number|add:1 <= page_obj.paginator.num_pages  %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% url 'maillist_list' %}?{% get_query request page=page_obj.next_page_number|add:1 %}"  >
+                            {{ page_obj.next_page_number|add:1 }}
+                        </a>
+                    </li>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% url 'maillist_list' %}?{% get_query request page=page_obj.next_page_number %}">
+                            Sonraki
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_footer %}
+    <script type="application/javascript">
+        function start(url) {
+            $.ajax({
+            type: "GET",
+            headers:{"Content-type":"application/json"},
+            url: url,
+            success: function(data, textStatus, xhr){
+                if (xhr.status === 200) {
+                    if(data.status === 'sent'){
+                        alert("Başlatıldı")
+                    }else if(data.status === 'working'){
+                        alert("Zaten Çalışmakta")
+                    }
+
+                }
+            }
+        });
+        }
+    </script>
+{% endblock %}

@@ -6,7 +6,8 @@ from .models import Message, DontSendEntry, MessageLog
 
 
 def show_to(message):
-    return ", ".join(message.to_addresses)
+    print('asdasd', message.to_addresses)
+    return ", ".join([str(email) for email in message.to_addresses])
 show_to.short_description = "To"  # noqa: E305
 
 

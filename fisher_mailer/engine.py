@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import time
 import smtplib
 import logging
+import traceback
 
 import lockfile
 from socket import error as socket_error
@@ -134,24 +135,22 @@ def send_all():
     sent = 0
 
     try:
-        connection = None
         for message in prioritize():
             try:
-                if connection is None:
-                    if message.email.connection:
-                        _con = message.email.connection
-                        connection = EmailBackend(host=_con.host,
-                                                  port=_con.port,
-                                                  username=message.email.username,
-                                                  password=message.email.password,
-                                                  use_tls=_con.use_tls,
-                                                  use_ssl=_con.use_ssl)
-                    else:
-                        connection = get_connection(backend=EMAIL_BACKEND, )
+                print('MSG', message.email.host, message.email.port, message.email.username)
+                if message.email.connection:
+                    connection = EmailBackend(host=message.email.host,
+                                              port=message.email.port,
+                                              username=message.email.username,
+                                              password=message.email.password,
+                                              use_tls=message.email.use_tls,
+                                              use_ssl=message.email.use_ssl)
+                else:
+                    connection = get_connection(backend=EMAIL_BACKEND, )
 
                 logging.info("sending message '{0}' to {1}".format(
                     message.subject,
-                    ", ".join(message.to_addresses))
+                    ", ".join([str(email) for email in message.to_addresses]))
                 )
                 email = message.email
                 if email is not None:
@@ -162,8 +161,9 @@ def send_all():
                         # unpickled under Django 1.8
                         email.reply_to = []
                     ensure_message_id(email)
+                    print('YYYY')
                     email.send()
-
+                    print('XXXXs')
                     # connection can't be stored in the MessageLog
                     email.connection = None
                     message.email = email  # For the sake of MessageLog
@@ -174,18 +174,17 @@ def send_all():
                         "message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (
                         message.when_added, message.priority))  # noqa
                 message.delete()
-                connection = None
 
             except (socket_error, smtplib.SMTPSenderRefused,
                     smtplib.SMTPRecipientsRefused,
                     smtplib.SMTPDataError,
                     smtplib.SMTPAuthenticationError) as err:
                 message.defer()
+                traceback.print_exc()
                 logging.info("message deferred due to failure: %s" % err)
                 MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
                 deferred += 1
                 # Get new connection, it case the connection itself has an error.
-                connection = None
 
             # Check if we reached the limits for the current run
             if _limits_reached(sent, deferred):

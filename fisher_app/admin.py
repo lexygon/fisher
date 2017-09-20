@@ -42,7 +42,7 @@ class TargetMailAdminForm(forms.ModelForm):
 class TargetMailAdmin(admin.ModelAdmin):
     form = TargetMailAdminForm
     list_display = ['name', 'slug', 'created', 'last_updated', 'email', 'uuid', 'is_read']
-    readonly_fields = ['slug', 'created', 'last_updated']
+    readonly_fields = ['slug', 'last_updated']
 
 
 admin.site.register(TargetMail, TargetMailAdmin)
@@ -71,8 +71,8 @@ class CatchedDataAdminForm(forms.ModelForm):
 
 class CatchedDataAdmin(admin.ModelAdmin):
     form = CatchedDataAdminForm
-    list_display = ['slug', 'created', 'last_updated', 'ip', 'user_agent', 'location']
-    readonly_fields = ['slug', 'created', 'last_updated']
+    list_display = ['created', 'last_updated', 'ip', 'user_agent', 'location']
+    readonly_fields = ['created', 'last_updated']
 
 
 admin.site.register(CatchedData, CatchedDataAdmin)

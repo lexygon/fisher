@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Fisher - Dashboard{% endblock %}
+
+{% block extra_head %}
+
+{% endblock %}
+
+{% block content %}
+    <div class="card">
+    <div class="card-header">
+        Mail Listeleri
+    </div>
+    <div class="card-block">
+        <select class="form-control select-dropdown" id="maillists-drop">
+            {% for list in maillists %}
+                <option value="{{ list.slug }}">{{ list.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card card-inverse card-success">
+                <div class="card-block">
+                    <div class="h1 text-muted text-xs-right m-b-2">
+                        <i class="icon-target"></i>
+                    </div>
+                    <div class="h4 m-b-0" id="target_count">0</div>
+                    <small class="text-muted text-uppercase font-weight-bold" >Hedef Sayısı</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-inverse card-info">
+                <div class="card-block">
+                    <div class="h1 text-muted text-xs-right m-b-2">
+                        <i class="icon-speech"></i>
+                    </div>
+                    <div class="h4 m-b-0" id="sender_count">0</div>
+                    <small class="text-muted text-uppercase font-weight-bold" >Gönderici Mail Sayısı</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-inverse card-warning">
+                <div class="card-block">
+                    <div class="h1 text-muted text-xs-right m-b-2">
+                        <i class="icon-basket-loaded"></i>
+                    </div>
+                    <div class="h4 m-b-0" id="read_count">0</div>
+                    <small class="text-muted text-uppercase font-weight-bold" >Açılmış Mail Sayısı</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-inverse card-primary">
+                <div class="card-block">
+                    <div class="h1 text-muted text-xs-right m-b-2">
+                        <i class="icon-pie-chart"></i>
+                    </div>
+                    <div class="h4 m-b-0" id="unread_count">0</div>
+                    <small class="text-muted text-uppercase font-weight-bold" >Açılmamış Mail Sayısı</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-columns cols-2">
+        <div class="card">
+            <div class="card-header">
+                Güne Göre
+                <div class="card-actions">
+                    <a href="http://www.chartjs.org">
+                        <small class="text-muted">docs</small>
+                    </a>
+                </div>
+            </div>
+            <div class="card-block">
+                <div class="chart-wrapper">
+                    <canvas id="chart-by-day"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                Browsera Göre
+                <div class="card-actions">
+                    <a href="http://www.chartjs.org">
+                        <small class="text-muted">docs</small>
+                    </a>
+                </div>
+            </div>
+            <div class="card-block">
+                <div class="chart-wrapper">
+                    <canvas id="chart-by-useragent"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                Şehire Göre
+                <div class="card-actions">
+                    <a href="http://www.chartjs.org">
+                        <small class="text-muted">docs</small>
+                    </a>
+                </div>
+            </div>
+            <div class="card-block">
+                <div class="chart-wrapper">
+                    <canvas id="chart-by-city"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                Ülkeye Göre
+                <div class="card-actions">
+                    <a href="http://www.chartjs.org">
+                        <small class="text-muted">docs</small>
+                    </a>
+                </div>
+            </div>
+            <div class="card-block">
+                <div class="chart-wrapper">
+                    <canvas id="chart-by-country"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_footer %}
+    <script type="application/javascript">
+        $('.select-dropdown').select2();
+
+        $('#maillists-drop').on('change', function (event) {
+            get_statistics(event.target.value)
+        });
+
+        $('#maillists-drop').trigger("change");
+
+        function get_statistics(slug){
+            $.ajax({
+                type: "GET",
+                headers:{"Content-type":"application/json"},
+                url: '/api/v1/statistics/' + slug + '/',
+                success: function(data){
+                    set_day_chart(data.by_day);
+                    set_useragent_chart(data.by_user_agent);
+                    set_city_chart(data.by_city);
+                    set_country_chart(data.by_country);
+                    $('#read_count').html(data.total_read);
+                    $('#unread_count').html(data.total_unread);
+                    $('#target_count').html(data.total_victim);
+                    $('#sender_count').html(data.total_senders);
+                }
+            });
+        }
+
+        function set_city_chart(data){
+
+            var labels = [];
+            var datas = [];
+
+            data.forEach(function (datum) {
+                if(datum.city__name !== null){
+                    labels.push(datum.city__name);
+                    datas.push(datum.count);
+                }
+
+            });
+
+            var city_chart = {
+                labels : labels,
+                datasets : [
+                    {
+                        label: 'Şehre göre erişim',
+                        backgroundColor : 'rgba(220,220,220,0.2)',
+                        borderColor : 'rgba(220,220,220,1)',
+                        pointBackgroundColor : 'rgba(220,220,220,1)',
+                        pointBorderColor : '#fff',
+                        data : datas
+                    }
+                ]
+            };
+
+            var ctx = document.getElementById('chart-by-city');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: city_chart,
+                options: {
+                  responsive: true
+                }
+            });
+
+        }
+
+        function set_country_chart(data){
+
+            var labels = [];
+            var datas = [];
+
+            data.forEach(function (datum) {
+                if(datum.country__name !== null){
+                    labels.push(datum.country__name);
+                    datas.push(datum.count);
+                }
+
+            });
+
+            var country_chart = {
+                labels : labels,
+                datasets : [
+                    {
+                        label: 'Ülkeye göre erişim',
+                        backgroundColor : 'rgba(220,220,220,0.2)',
+                        borderColor : 'rgba(220,220,220,1)',
+                        pointBackgroundColor : 'rgba(220,220,220,1)',
+                        pointBorderColor : '#fff',
+                        data : datas
+                    }
+                ]
+            };
+
+            var ctx = document.getElementById('chart-by-country');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: country_chart,
+                options: {
+                  responsive: true
+                }
+            });
+
+        }
+
+        function set_useragent_chart(data){
+
+            var labels = [];
+            var datas = [];
+
+            data.forEach(function (datum) {
+                labels.push(datum.user_agent);
+                datas.push(datum.count);
+            });
+
+            var user_agent_chart = {
+                labels : labels,
+                datasets : [
+                    {
+                        label: 'Browsera göre erişim',
+                        backgroundColor : 'rgba(220,220,220,0.2)',
+                        borderColor : 'rgba(220,220,220,1)',
+                        pointBackgroundColor : 'rgba(220,220,220,1)',
+                        pointBorderColor : '#fff',
+                        data : datas
+                    }
+                ]
+            };
+
+            var ctx = document.getElementById('chart-by-useragent');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: user_agent_chart,
+                options: {
+                  responsive: true
+                }
+            });
+
+        }
+
+        function set_day_chart(data) {
+            var labels = [];
+            var datas = [];
+
+            data.forEach(function (datum) {
+                labels.push(datum.date);
+                datas.push(datum.count);
+            });
+
+            var day_chart = {
+                labels : labels,
+                datasets : [
+                    {
+                        label: 'Güne göre erişim',
+                        backgroundColor : 'rgba(220,220,220,0.2)',
+                        borderColor : 'rgba(220,220,220,1)',
+                        pointBackgroundColor : 'rgba(220,220,220,1)',
+                        pointBorderColor : '#fff',
+                        data : datas
+                    }
+                ]
+            };
+
+            var ctx = document.getElementById('chart-by-day');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: day_chart,
+                options: {
+                  responsive: true
+                }
+            });
+        }
+
+    </script>
+{% endblock %}
