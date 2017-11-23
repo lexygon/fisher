@@ -31,6 +31,7 @@ EMAIL_PORT = 465
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
 EMAIL_BACKEND = "fisher_mailer.backend.DbBackend"
+MAILER_EMAIL_BACKEND = "fisher_mailer.backend.DbBackend"
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Application definition
@@ -106,7 +107,7 @@ WSGI_APPLICATION = 'fisher.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'database.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'database.sqlite3'),
     }
 }
 

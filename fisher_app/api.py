@@ -2,6 +2,7 @@ from django.contrib.auth.models import update_last_login
 from django.core.mail import get_connection, EmailMessage, EmailMultiAlternatives
 from django.http import Http404
 from django.template.loader import render_to_string
+from django.urls import reverse
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.generics import RetrieveDestroyAPIView, RetrieveAPIView
 from rest_framework.response import Response
@@ -176,7 +177,8 @@ class StartMailListView(RetrieveDestroyAPIView):
                             use_ssl=sender_mail.use_ssl
                     ) as connection:
                         # mail şablonunun içindeki {{ image_url }} kısmına urli gönderip stringe render ediyor
-                        image_url = "http://{0}/file/{1}".format(settings.DOMAIN, target.uuid)
+                        # image_url = "http://{0}/file/{1}".format(settings.DOMAIN, target.uuid)
+                        image_url = request.build_absolute.uri(reverse('file_view', args=(target.uuid, )))
                         str_template = render_to_string(template_name='{0}/{1}'.format(settings.MEDIA_ROOT,
                                                                                        str(
                                                                                            mail_list_object.template.file)),
